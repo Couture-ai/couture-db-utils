@@ -1,0 +1,20 @@
+version: '3.5'
+services:
+  osprey-search:
+    container_name: ajio-search-prevalidation
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: localhost/with-2-stage-build
+    ports:
+      - "8491:8491"
+    volumes:
+      - "./src/main.py:/server/main.py"
+      - "./entrypoint.sh:/server/entrypoint.sh"
+      - "./.env:/server/.env"
+      - "./src/core/settings.py:/server/settings.py"
+      - "./src:/server/"
+    command: server
+    mem_limit: 4g
+    privileged: true
+    

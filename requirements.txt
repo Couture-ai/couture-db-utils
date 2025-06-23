@@ -1,0 +1,8 @@
+fastapi
+qdrant-client
+redis
+python-dotenv
+lz4
+orjson
+asyncio
+uvicorn
