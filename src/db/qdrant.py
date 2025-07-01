@@ -1,6 +1,7 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qdrant_models
 from core.settings import QDRANT_HOST, QDRANT_PORT, COLLECTION_NAME
+from typing import Union
 
 
 class QdrantWrapper:
@@ -16,20 +17,25 @@ class QdrantWrapper:
         must_filters: dict = None,
         should_filters: dict = None,
     ) -> list:
-        scroll_result = self.client.scroll(
-            collection_name=COLLECTION_NAME,
-            scroll_filter=qdrant_models.Filter(
-                must=[
-                    qdrant_models.FieldCondition(
-                        key="colorGroup_string",
-                        match=qdrant_models.MatchValue(value=product_option_id),
-                    )
-                ]
-            ),
-            limit=1,
-            with_vectors=True,
-            with_payload=False,
-        )
+        try:
+            scroll_result = self.client.scroll(
+                collection_name=COLLECTION_NAME,
+                scroll_filter=qdrant_models.Filter(
+                    must=[
+                        qdrant_models.FieldCondition(
+                            key="colorGroup_string",
+                            match=qdrant_models.MatchValue(value=product_option_id),
+                        )
+                    ]
+                ),
+                limit=1,
+                with_vectors=True,
+                with_payload=False,
+            )
+
+            print(f"Found the qdrant ID: {product_option_id} in Qdrant!")
+        except Exception as e:
+            return f"Error in scrolling: {e}"
 
         if not scroll_result or not scroll_result[0]:
             raise ValueError(
@@ -62,3 +68,44 @@ class QdrantWrapper:
         )
 
         return [hit.id for hit in search_result]
+
+    def get_qdrant_metadata(
+        self,
+        point_id: str = None,
+        colorGroup_string: str = None,
+        required_fields: Union[list, str] = "all",
+    ):
+        if (not point_id and not colorGroup_string) or (point_id and colorGroup_string):
+            print("Searching when both / none cannot happen, exiting")
+            return {}
+
+        try:
+            id = point_id if point_id else colorGroup_string
+            column = "point_id" if point_id else "colorGroup_string"
+
+            print(f"Fetching {column}:{id}")
+
+            scroll_result = self.client.scroll(
+                collection_name=COLLECTION_NAME,
+                scroll_filter=qdrant_models.Filter(
+                    must=[
+                        qdrant_models.FieldCondition(
+                            key=column,
+                            match=qdrant_models.MatchValue(value=id),
+                        )
+                    ]
+                ),
+                limit=1,
+                with_vectors=False,
+                with_payload=True,
+            )
+
+            # at most one needs to be matched
+            all_results = []
+            for res in scroll_result[0]:
+                all_results.append(res.payload)
+
+            return all_results
+
+        except Exception as e:
+            print(f"Error in fetching qdrant data for id: {id}- {e}")

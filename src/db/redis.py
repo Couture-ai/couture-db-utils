@@ -1,7 +1,6 @@
 from redis.asyncio.cluster import RedisCluster
 from core.settings import REDIS_HOST, REDIS_PORT, REDIS_PREFIX
-import lz4.frame
-import orjson
+from utils import decode_response
 
 
 class RedisClient:
@@ -19,8 +18,7 @@ class RedisClient:
 
         decoded_data = []
         for item in raw_data:
-            decompressed = lz4.frame.decompress(item)
-            parsed = orjson.loads(decompressed)
+            parsed = decode_response
             decoded_data.append(parsed)
 
         return decoded_data
