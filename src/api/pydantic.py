@@ -10,13 +10,13 @@ class FiltersRequest(BaseModel):
 # Similarity API required models
 class SimilarProductsRequest(BaseModel):
     colorGroup_string: str
-    product_attributes: Optional[FiltersRequest]
+    product_attributes: Optional[FiltersRequest] = None
     dev: dict
 
 
 class SimilarProductsResponse(BaseModel):
     similar_ids: list
-    metadata: dict = {}
+    metadata: list = []
 
 
 # QdrantModels
