@@ -18,7 +18,7 @@ class RedisClient:
 
         decoded_data = []
         for item in raw_data:
-            parsed = decode_response
+            parsed = decode_response(item)
             decoded_data.append(parsed)
 
         return decoded_data
